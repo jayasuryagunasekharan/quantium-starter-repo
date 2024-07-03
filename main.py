@@ -1,42 +1,41 @@
-import glob
-import pandas as pd
+import csv
+import os
 
-# Specify the directory path where your CSV files are located
-directory_path = './data/'
+DATA_DIRECTORY = "./data"
+OUTPUT_FILE_PATH = "./formatted_data.csv"
 
-# Specify the product type you are interested in
-product_type = "pink morsel"
+# open the output file
+with open(OUTPUT_FILE_PATH, "w") as output_file:
+    writer = csv.writer(output_file)
 
-# Use glob to find all CSV files in the directory
-file_paths = glob.glob(directory_path + '*.csv')
+    # add a csv header
+    header = ["sales", "date", "region"]
+    writer.writerow(header)
 
-# Initialize an empty list to store DataFrames
-dfs = []
+    # iterate through all files in the data directory
+    for file_name in os.listdir(DATA_DIRECTORY):
+        # open the csv file for reading
+        with open(f"{DATA_DIRECTORY}/{file_name}", "r") as input_file:
+            reader = csv.reader(input_file)
+            # iterate through each row in the csv file
+            row_index = 0
+            for input_row in reader:
+                # if this row is not the csv header, process it
+                if row_index > 0:
+                    # collect data from row
+                    product = input_row[0]
+                    raw_price = input_row[1]
+                    quantity = input_row[2]
+                    transaction_date = input_row[3]
+                    region = input_row[4]
 
-# Iterate over each file path and read the CSV into a DataFrame
-for file_path in file_paths:
-    df = pd.read_csv(file_path)
+                    # if this is a pink morsel transaction, process it
+                    if product == "pink morsel":
+                        # finish formatting data
+                        price = float(raw_price[1:])
+                        sale = price * int(quantity)
 
-    # Filter rows where product type matches "pink morsel"
-    df_filtered = df[df['product'] == product_type]
-
-    # Convert price to numeric, removing '$' and converting to float
-    df_filtered['price'] = df_filtered['price'].replace('[\$,]', '', regex=True).astype(float)
-
-    # Calculate sales by multiplying quantity and price
-    df_filtered['sales'] = df_filtered['quantity'] * df_filtered['price']
-
-    # Select only the relevant columns for final output
-    df_final = df_filtered[['sales', 'date', 'region']]
-
-    # Append filtered DataFrame to the list
-    dfs.append(df_final)
-
-# Concatenate all filtered DataFrames into a single DataFrame
-combined_df = pd.concat(dfs, ignore_index=True)
-
-# Format the sales column as currency
-combined_df['sales'] = combined_df['sales'].map('${:,.2f}'.format)
-
-# Print the combined DataFrame
-print(combined_df)
+                        # write the row to output file
+                        output_row = [sale, transaction_date, region]
+                        writer.writerow(output_row)
+                row_index += 1
