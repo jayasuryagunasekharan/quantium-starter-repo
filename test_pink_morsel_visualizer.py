@@ -1,4 +1,4 @@
-from pink_morsel_visualizer import dash_app
+from lineDash import dash_app
 
 
 def test_header_exists(dash_duo):
